@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <title>Scope tests</title>
+
+    <script type='text/javascript' src='../browser/scope.js'></script>
+    <script type='text/javascript'>
+    (function(){
+      
+      
+      
+      var foo = oldfoo = 3;
+      
+      function f() {return foo;};
+      var scope;
+      scope = Scope.create({
+        values: {
+          foo: foo
+        },
+        literals: {
+          f: f
+        }
+      });
+      console.log(scope.eval('f')());
+      
+      
+      scope = Scope.create({
+        values: {
+          foo: foo
+        }
+      });
+      
+      console.dir(scope.run(function() {
+        return foo;
+      }));
+
+
+      var newfoo = 4;
+      scope = Scope.create({
+        values: {
+          foo: foo
+        }
+        
+      });
+      console.log(scope.foo);
+      scope.foo = newfoo;
+      console.log(scope.eval('foo'));
+  
+  
+      
+    })();
+    </script>
+
+  </head>
+
+  <body></body>
+
+</html>
+
