@@ -9,6 +9,7 @@
 # Scopejs is an object-oriented library for defining and working with lexical scopes.
 
 # ###Helpers
+
 # isString and isFn are borrowed from underscorejs by way of CoffeeScript
 isString = (x) -> !!(x is '' or (x and x.charCodeAt and x.substr)) 
 isFn = (x) -> !!(x and x.constructor and x.call and x.apply) 
@@ -16,7 +17,7 @@ isFn = (x) -> !!(x and x.constructor and x.call and x.apply)
 # Extend object `x` with the properties of all objects in `more`
 extend = (x, more...) -> (x[k] = v for k,v of o) for o in more; x
 
-# ##class Scope.
+# ##class Scope
 # This class represents a lexical scope.
 exports.Scope = class Scope
   
@@ -36,7 +37,7 @@ exports.Scope = class Scope
       # Remove name from named function
       x = x.replace /function[^\(]*\(/, "function ("
       "(#{x})"
-    # Give x a chance to decompile itself.
+    # Otherwise, let `x` decompile itself.
     else x.literal()
 
   # These values are defined in every root scope.
@@ -71,11 +72,21 @@ exports.Scope = class Scope
     # It contains the rootValues.
     @root = @global.extend values: @rootValues
   
-  # ##Instance creation
+  # Create a getters / setters for the given name.
+  @makeGetter = (name) -> 
+    -> @_eval name
+  @makeSetter = (name) -> 
+    (val) -> @_eval.call {val}, "#{name} = this.val"
   
   # ### Scope.create(options)
   # Returns a scope that extends the root scope
-  # of this class. There are two ways to define
+  # of this class. 
+  # 
+  # See constructor for description of options.
+  @create = (options) -> @root.extend options
+
+  # ### constructor(options)
+  # There are two ways to define
   # local variables in the new scope: using _values_
   # and _literals_.
   # 
@@ -103,56 +114,49 @@ exports.Scope = class Scope
   #     });
   # 
   #     log(scope.eval('foo')); // 3
-  @create = (options) -> @root.extend options
-
-  # The constructor takes the same options as Scope.create.
   constructor: (@options = {}) ->
     # The types of variable options.
     varTypes = ['values', 'literals']
-    # Normalize and read options
+    # Normalize and read options.
     @options[k] ?= {} for k in varTypes
     @options.values.__scope = @
     {@parent} = @options
-    # Register variable names
+    # Register variable names in options.
     names = []
     names.push name for name of @options[k] for k in varTypes
     throw 'Reserved' for n in names when n in @reserved
     @names = names.concat @parent?.names or []
-    # Create a 'scoped eval' by evaling `this.literal` in the 
-    # parent scope.
-    @_eval = @parent?.eval({locals: @options.values}, @) or globalEval 
-    # Export Locals
+    # Create a 'scoped eval'
+    @_eval = 
+      unless @parent? then globalEval
+      else
+        # Concatenate and set all literals, ending with EVAL_LITERAL
+        expr = (for name, val of @options.literals
+          "var #{name} = #{literalize val};\n").join('') + 
+          EVAL_LITERAL
+        # Eval `expr` in the parent scope with local values.
+        @parent.eval {locals: @options.values}, expr
+    # Exports: created getters and setters for exported variables
     exports = (x for x in @names when not x.match /^_/)
     throw 'Name collision' for x in exports when x of @
+    C = @constructor
     if @__defineGetter__?
       for x in exports
-        @__defineGetter__ x, @exportGetter x
-        @__defineSetter__ x, @exportSetter x
+        @__defineGetter__ x, C.makeGetter x
+        @__defineSetter__ x, C.makeSetter x
     else 
-      @[x] = @getter(x)() for x in exports
+      @[x] = C.makeGetter(x)() for x in exports
 
   
-  # Returns a literal expression for this scope's `_eval` method.
-  literal: -> 
-    (for name, val of @options.literals
-      "var #{name} = #{literalize val};\n").join('') + 
-    EVAL_LITERAL
-  
-  # Create a getter / setter for the given name.
-  exportGetter: (name) -> => @get name
-  exportSetter: (name) -> (val) => @set name, val
-  
-  # ##Runtime (post-initialize) methods
-  
+  # ### Scope::eval(ctx, expr)
   # Evaluate an expression in this scope.
   # 
   # The `expr` parameter gets literalized before being eval'd
   # 
-  # The optional `ctx` parameter serves as the value of 'this'
-  # for the expression.
+  # The optional `ctx` parameter serves as the value of `this`
+  # for the eval of `expr`.
   # 
-  # `ctx.locals` may define additional local values only
-  # visible to expr.
+  # `ctx.locals` may define additional local values visible only to `expr`.
   eval: (ctx, expr) -> 
     [ctx, expr] = [{}, ctx] unless expr
     locals = 
@@ -162,31 +166,18 @@ exports.Scope = class Scope
         
     @_eval.call ctx, locals + literalize expr
   
-  # 'Run' a function in this scope. i.e., literalize, eval and call
+  # ### Scope::run(ctx, fn)
+  # 'Run' a function in this scope. i.e., `literalize`, `eval` and `call`
   # the given function within this scope.
   run: (ctx, fn) -> 
     [ctx, fn] = [{}, ctx] unless fn
     @eval ctx, "#{literalize fn}.call(this)"
 
-  # Set a local, or multiple locals in this scope.
-  set: (name, val, isLiteral = false) ->
-    if isString name 
-      throw 'Undeclared' unless name in @names
-      @_eval.call {val}, "#{name} = " + 
-        if isLiteral then literalize val else "this.val"
-    else 
-      # Set multiple values.
-      obj = name; isLiteral = val
-      @set name, val, isLiteral for name, val of obj
-    @
-  
-  # Get a value from this scope
-  get: (name) -> @_eval name
-  
-  # Incorporate given locals and closures into a
-  # scope that extends this one.
-  extend: (options = {}) -> new @constructor extend options, parent: @
+  # ### Scope::extend(options)
+  # Create a new scope that extends this one, with the given options.
+  # See `constructor` for a list 
+  extend: (options) -> new @constructor extend options, parent: @
      
-  #Initialize the class
+  #Initialize this class
   @initialize()
   

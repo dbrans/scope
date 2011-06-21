@@ -26,7 +26,7 @@ var __slice = Array.prototype.slice, __indexOf = Array.prototype.indexOf || func
     if (this[i] === item) return i;
   }
   return -1;
-}, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+};
 isString = function(x) {
   return !!(x === '' || (x && x.charCodeAt && x.substr));
 };
@@ -107,11 +107,23 @@ exports.Scope = Scope = (function() {
       values: this.rootValues
     });
   };
+  Scope.makeGetter = function(name) {
+    return function() {
+      return this._eval(name);
+    };
+  };
+  Scope.makeSetter = function(name) {
+    return function(val) {
+      return this._eval.call({
+        val: val
+      }, "" + name + " = this.val");
+    };
+  };
   Scope.create = function(options) {
     return this.root.extend(options);
   };
   function Scope(options) {
-    var exports, k, n, name, names, varTypes, x, _base, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _m, _n, _ref, _ref2, _ref3;
+    var C, exports, expr, k, n, name, names, val, varTypes, x, _base, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _m, _n, _ref, _ref2;
     this.options = options != null ? options : {};
     varTypes = ['values', 'literals'];
     for (_i = 0, _len = varTypes.length; _i < _len; _i++) {
@@ -136,15 +148,24 @@ exports.Scope = Scope = (function() {
       }
     }
     this.names = names.concat(((_ref2 = this.parent) != null ? _ref2.names : void 0) || []);
-    this._eval = ((_ref3 = this.parent) != null ? _ref3.eval({
-      locals: this.options.values
-    }, this) : void 0) || globalEval;
-    exports = (function() {
-      var _l, _len4, _ref4, _results;
-      _ref4 = this.names;
+    this._eval = this.parent == null ? globalEval : (expr = ((function() {
+      var _ref3, _results;
+      _ref3 = this.options.literals;
       _results = [];
-      for (_l = 0, _len4 = _ref4.length; _l < _len4; _l++) {
-        x = _ref4[_l];
+      for (name in _ref3) {
+        val = _ref3[name];
+        _results.push("var " + name + " = " + (literalize(val)) + ";\n");
+      }
+      return _results;
+    }).call(this)).join('') + EVAL_LITERAL, this.parent.eval({
+      locals: this.options.values
+    }, expr));
+    exports = (function() {
+      var _l, _len4, _ref3, _results;
+      _ref3 = this.names;
+      _results = [];
+      for (_l = 0, _len4 = _ref3.length; _l < _len4; _l++) {
+        x = _ref3[_l];
         if (!x.match(/^_/)) {
           _results.push(x);
         }
@@ -157,42 +178,20 @@ exports.Scope = Scope = (function() {
         throw 'Name collision';
       }
     }
+    C = this.constructor;
     if (this.__defineGetter__ != null) {
       for (_m = 0, _len5 = exports.length; _m < _len5; _m++) {
         x = exports[_m];
-        this.__defineGetter__(x, this.exportGetter(x));
-        this.__defineSetter__(x, this.exportSetter(x));
+        this.__defineGetter__(x, C.makeGetter(x));
+        this.__defineSetter__(x, C.makeSetter(x));
       }
     } else {
       for (_n = 0, _len6 = exports.length; _n < _len6; _n++) {
         x = exports[_n];
-        this[x] = this.getter(x)();
+        this[x] = C.makeGetter(x)();
       }
     }
   }
-  Scope.prototype.literal = function() {
-    var name, val;
-    return ((function() {
-      var _ref, _results;
-      _ref = this.options.literals;
-      _results = [];
-      for (name in _ref) {
-        val = _ref[name];
-        _results.push("var " + name + " = " + (literalize(val)) + ";\n");
-      }
-      return _results;
-    }).call(this)).join('') + EVAL_LITERAL;
-  };
-  Scope.prototype.exportGetter = function(name) {
-    return __bind(function() {
-      return this.get(name);
-    }, this);
-  };
-  Scope.prototype.exportSetter = function(name) {
-    return __bind(function(val) {
-      return this.set(name, val);
-    }, this);
-  };
   Scope.prototype.eval = function(ctx, expr) {
     var locals, name, _ref;
     if (!expr) {
@@ -214,31 +213,6 @@ exports.Scope = Scope = (function() {
       _ref = [{}, ctx], ctx = _ref[0], fn = _ref[1];
     }
     return this.eval(ctx, "" + (literalize(fn)) + ".call(this)");
-  };
-  Scope.prototype.set = function(name, val, isLiteral) {
-    var obj;
-    if (isLiteral == null) {
-      isLiteral = false;
-    }
-    if (isString(name)) {
-      if (__indexOf.call(this.names, name) < 0) {
-        throw 'Undeclared';
-      }
-      this._eval.call({
-        val: val
-      }, ("" + name + " = ") + (isLiteral ? literalize(val) : "this.val"));
-    } else {
-      obj = name;
-      isLiteral = val;
-      for (name in obj) {
-        val = obj[name];
-        this.set(name, val, isLiteral);
-      }
-    }
-    return this;
-  };
-  Scope.prototype.get = function(name) {
-    return this._eval(name);
   };
   Scope.prototype.extend = function(options) {
     if (options == null) {
