@@ -4,6 +4,6 @@
     |___/\___|\___/| .__/ \___|_/ |___/
                    |_|        |__/    
                    
-A library for defining and working with lexical scopes.
+A library for defining and working with lexical scopes in JavaScript.
 
-Please visit the [home page](http://scopejs.org) for documentation.
+Please visit [the ScopeJS home page](http://scopejs.org) for documentation.
