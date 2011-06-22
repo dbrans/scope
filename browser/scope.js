@@ -46,9 +46,9 @@ extend = function() {
   return x;
 };
 exports.Scope = Scope = (function() {
-  var EVAL_LITERAL, globalEval, literalize;
+  var EVAL_LITERAL, literalize;
   EVAL_LITERAL = "(function(__expr){return eval(__expr)})";
-  Scope.globalEval = globalEval = (1, eval)(EVAL_LITERAL);
+  Scope.eval = (1, eval)(EVAL_LITERAL);
   Scope.literalize = literalize = function(x) {
     if (isString(x)) {
       return x;
@@ -100,13 +100,7 @@ exports.Scope = Scope = (function() {
       return _results;
     }
   };
-  Scope.prototype.reserved = Scope.reserved = ['__expr'];
-  Scope.initialize = function() {
-    this.global = new this();
-    return this.root = this.global.extend({
-      values: this.rootValues
-    });
-  };
+  Scope.reserved = ['__expr'];
   Scope.makeGetter = function(name) {
     return function() {
       return this._eval(name);
@@ -119,11 +113,17 @@ exports.Scope = Scope = (function() {
       }, "" + name + " = this.val");
     };
   };
+  Scope.initialize = function() {
+    this.global = new this();
+    return this.root = this.global.extend({
+      values: this.rootValues
+    });
+  };
   Scope.create = function(options) {
     return this.root.extend(options);
   };
   function Scope(options) {
-    var C, exports, expr, k, n, name, names, val, varTypes, x, _base, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _m, _n, _ref, _ref2;
+    var C, exports, k, literals, n, name, names, val, varTypes, x, _base, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _m, _n, _ref, _ref2;
     this.options = options != null ? options : {};
     varTypes = ['values', 'literals'];
     for (_i = 0, _len = varTypes.length; _i < _len; _i++) {
@@ -143,12 +143,12 @@ exports.Scope = Scope = (function() {
     }
     for (_k = 0, _len3 = names.length; _k < _len3; _k++) {
       n = names[_k];
-      if (__indexOf.call(this.reserved, n) >= 0) {
+      if (__indexOf.call(this.constructor.reserved, n) >= 0) {
         throw 'Reserved';
       }
     }
     this.names = names.concat(((_ref2 = this.parent) != null ? _ref2.names : void 0) || []);
-    this._eval = this.parent == null ? globalEval : (expr = ((function() {
+    this._eval = this.parent == null ? Scope.eval : (literals = ((function() {
       var _ref3, _results;
       _ref3 = this.options.literals;
       _results = [];
@@ -157,9 +157,9 @@ exports.Scope = Scope = (function() {
         _results.push("var " + name + " = " + (literalize(val)) + ";\n");
       }
       return _results;
-    }).call(this)).join('') + EVAL_LITERAL, this.parent.eval({
+    }).call(this)).join(''), this.parent.eval({
       locals: this.options.values
-    }, expr));
+    }, literals + EVAL_LITERAL));
     exports = (function() {
       var _l, _len4, _ref3, _results;
       _ref3 = this.names;
@@ -215,9 +215,6 @@ exports.Scope = Scope = (function() {
     return this.eval(ctx, "" + (literalize(fn)) + ".call(this)");
   };
   Scope.prototype.extend = function(options) {
-    if (options == null) {
-      options = {};
-    }
     return new this.constructor(extend(options, {
       parent: this
     }));
