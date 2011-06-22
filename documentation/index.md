@@ -245,9 +245,9 @@ declare a variable with that name inside your function, even if that variable ex
 This function-local variable will mask the one in the target scope:
 
     scope = Scope.create
-      locals:
+      values:
         foo: 3
-      compile:
+      literals:
         # Won't have the desired effect.
         setFoo: (val) -> foo = val
 
