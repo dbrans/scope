@@ -24,24 +24,29 @@ exec = (cmd, cb) ->
     cb?() unless error
 
 task 'doc', 'Build ScopeJS Documentation', ->
+  exec 'cd documentation; docco ../src/*.coffee', ->
 
-  showdown = require './docs/vendor/showdown'
-  md = fs.readFileSync './docs/index.md', 'utf8'
-  html = showdown.makeHtml md
-  index = """
-    <!DOCTYPE html> 
-    <html> 
-    <head> 
-      <meta http-equiv="content-type" content="text/html;charset=UTF-8" /> 
-      <title>ScopeJS</title>
-      <link rel="stylesheet" type="text/css" href="docs/css/docs.css" /> 
-      <link rel="shortcut icon" href="docs/images/favicon.ico" /> 
-    </head>
-    <body>
-      #{html}
-    </body>
-    </html>
-    """
+    {Showdown} = require './documentation/vendor/showdown'
+    md = fs.readFileSync './documentation/index.md', 'utf8'
+    html = Showdown.makeHtml md
+    index = """
+      <!DOCTYPE html> 
+      <html> 
+      <head> 
+        <meta http-equiv="content-type" content="text/html;charset=UTF-8" /> 
+        <title>ScopeJS</title>
+        <link rel="stylesheet" type="text/css" href="documentation/css/doc.css" /> 
+        <link rel="shortcut icon" href="documentation/images/favicon.ico" /> 
+      </head>
+      <body>
+        #{html}
+      </body>
+      </html>
+      """
+    
+    fs.writeFileSync 'index.html', index
+    
+  
   
 # Prepare this project to run in the browser.
 buildForBrowser = ({dir, out, init, vendor}) ->

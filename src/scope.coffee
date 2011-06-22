@@ -23,7 +23,7 @@ extend = (x, more...) -> (x[k] = v for k,v of o) for o in more; x
 # This class represents a lexical scope.
 exports.Scope = class Scope
   
-  # Function literal as a string: the 'scoped eval'
+  # The 'scoped eval' literal.
   EVAL_LITERAL = "(function(__expr){return eval(__expr)})"
 
   # ### Class methods
@@ -35,7 +35,7 @@ exports.Scope = class Scope
   # `Scope.eval(expr)` has these properties:
   # 
   # 1. `Scope.eval("var x")` will not declare a new global. 
-  # Whereas `evalInGlobalScope("var x") will.
+  # Whereas `evalInGlobalScope("var x")` will.
   # 2. `Scope.eval("x")` will not return the value of `x` in the 
   # current scope. Whereas `eval("x")` will.
   # 
@@ -225,7 +225,7 @@ exports.Scope = class Scope
   # #### Scope::extend(options)
   # Create a new scope that extends this one, with the given options.
   # See `constructor` for a list 
-  extend: (options) -> new @constructor extend options, parent: @
+  extend: (options = {}) -> new @constructor extend options, parent: @
      
   #Initialize this class
   @initialize()

@@ -215,6 +215,9 @@ exports.Scope = Scope = (function() {
     return this.eval(ctx, "" + (literalize(fn)) + ".call(this)");
   };
   Scope.prototype.extend = function(options) {
+    if (options == null) {
+      options = {};
+    }
     return new this.constructor(extend(options, {
       parent: this
     }));

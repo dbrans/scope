@@ -46,7 +46,7 @@
       scope.foo = newfoo;
       console.log(scope.eval('foo'));
   
-  
+      console.log(Scope.create().eval({locals:{foo: 3}}, 'foo'));
       
     })();
     </script>

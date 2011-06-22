@@ -3,15 +3,299 @@
 <head> 
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" /> 
   <title>ScopeJS</title>
-  <link rel="stylesheet" type="text/css" href="docs/css/docs.css" /> 
-  <link rel="shortcut icon" href="docs/images/favicon.ico" /> 
-
+  <link rel="stylesheet" type="text/css" href="documentation/css/doc.css" /> 
+  <link rel="shortcut icon" href="documentation/images/favicon.ico" /> 
 </head>
 <body>
-  
-  
-  
-  
-  
+  <h1>ScopeJS</h1>
+
+<p>A library for defining and working with lexical scopes.</p>
+
+<h2>Contents</h2>
+
+<ul>
+<li><a href="#useage">Installation and Useage</a></li>
+<li><a href="#theory">Theory</a></li>
+<li><a href="#api">API</a></li>
+<li><a href="documentation/docs/scope.html">Annotated Source</a></li>
+<li><a href="#coffee">CoffeeScript Support</a></li>
+</ul>
+
+<h2>Overview</h2>
+
+<pre><code>// Create a new lexical scope
+var scope = Scope.create({
+    values: {
+      foo: 3
+    },
+    literals: {
+      multiplyFoo: function(val) {
+        foo = foo * val;
+      }
+    }
+  });
+
+// Call a local function.
+scope.multiplyFoo(4);
+
+// Evaluate an expression locally.
+scope.eval('foo++');
+
+// Get a local variable.
+log(scope.foo); // 13
+
+// Extend a scope.
+var inner = scope.extend({
+    values: {
+      bar: 'bar'
+    }
+  });
+
+// Inner scope has access to the outer scope:
+inner.foo = 6;    
+log(scope.foo));        // 6
+
+// But outer scope does not have access to the inner scope:
+log(scope.eval('bar')); // Error: bar is not defined.
+</code></pre>
+
+<p><a href="http://github.com/dbrans/scopejs">Scopejs is hosted on github</a>.</p>
+
+<h2>Installation</h2>
+
+<p>There are two ways to install scopejs: via npm or via git.</p>
+
+<h3>NPM</h3>
+
+<ol>
+<li>If you haven't already, <a href="http://howtonode.org/introduction-to-npm">Install npm</a>. </li>
+<li><code>npm install scopejs</code></li>
+</ol>
+
+<h3>Git</h3>
+
+<p>To install from source, you should have <a href="http://coffeescript.org">CoffeeScript</a> installed.</p>
+
+<p>Then run:</p>
+
+<pre><code>git clone git://github.com/dbrans/scopejs.git
+cd scopejs
+cake install
+</code></pre>
+
+<h2>Including ScopeJS in your project.</h2>
+
+<h3>CommonJS Environment (e.g., Nodejs)</h3>
+
+<pre><code>var Scope = require('scopejs').Scope;
+var scope = Scope.create(...);
+</code></pre>
+
+<h3>Browser Environment</h3>
+
+<p>Include <code>browser/scope.js</code> in your html page:</p>
+
+<pre><code>&lt;script type="text/javascript" src="PATH_TO_SCOPEJS/browser/scope.js"&gt;&lt;/script&gt;
+</code></pre>
+
+<p><code>browser/scope.js</code> defines <code>Scope</code> as a global variable. So you can just go
+ahead and use it:</p>
+
+<pre><code>var scope = Scope.create(...);
+</code></pre>
+
+<h2>Community</h2>
+
+<p>Please use the <a href="http://github.com/dbrans/scopejs">github page for ScopeJS</a>
+to discuss and raise issues about ScopeJS.</p>
+
+<h2>Theory</h2>
+
+<h3>A 'scoped eval' function</h3>
+
+<p>Consider this function literal as a string:</p>
+
+<pre><code>var EVAL_LITERAL = "(function (expr) {return eval(expr)})";
+</code></pre>
+
+<p>Eval-ing this string in some lexical scope creates a 'scoped eval': 
+a function that, if passed outside of the current scope, can evaluate 
+expressions inside that scope. Here's a demonstration:</p>
+
+<pre><code>var scopeEval = (function() {
+  var x = 3;
+  return eval(EVAL_LITERAL);
+})();
+
+log(scopeEval('x')); // 3
+log(eval('x'));      // Error: x is not defined
+</code></pre>
+
+<p>In general, given a list of variable names <code>var1</code>, <code>var2</code>, ..., you can dynamically 
+create a lexical scope where those variables are defined like this:</p>
+
+<pre><code>var vars = ['var1', 'var2', ..., 'varN'];
+
+var scopeEval = (function() {
+  eval("var " + vars.join(',') + ';' + EVAL_LITERAL);
+});
+</code></pre>
+
+<p>This idea of a scoped eval function is at the heart of ScopeJS. </p>
+
+<p>Let's develop this idea a little bit.</p>
+
+<h3><em>Current</em> vs <em>Target</em> scopes</h3>
+
+<p>Let's call the scope in which our examples are imagined to run 
+the <em>current scope</em> 
+and the scope in which a scopeEval expression runs, the <em>target scope</em>.</p>
+
+<p>For simplicity, in our examples the current scope is the outer scope of
+the target scope. In other words, </p>
+
+<pre><code>// For simplicity:
+// CURRENT SCOPE
+var scopeEval = (function() {
+  // TARGET SCOPE
+  eval("var " + vars.join(',') + ';' + EVAL_LITERAL);
+});
+</code></pre>
+
+<p>In ScopeJS, however, the target scope lives somewhere else and cannot see the 
+current scope (see the <code>Scope.eval</code> class method in the 
+<a href="documentation/docs/scope.html">Annotated Source</a>)</p>
+
+<h3>Undeclared Variables</h3>
+
+<p>In these examples, the variables var1, var2, etc. refer to variables that
+are already declared in the target scope. Any assignment to undeclared 
+variables is a typo and would create global variables.</p>
+
+<h3>Literal Expressions</h3>
+
+<p>We can evaluate array, object and function literals inside the target scope. 
+Those literals have access to local variables. Consider:</p>
+
+<pre><code>scopeEval('var1 = 3');
+
+var obj = scopeEval('[var1]');
+
+log(obj[0]);           // 3
+</code></pre>
+
+<h4>Function Literals and Closures</h4>
+
+<p>Function literals that are eval'd in a scope close over local variables in that
+scope and can manipulate them directly:</p>
+
+<pre><code>var addToVar = scopeEval('(function(x){var1 += x})');
+
+addToVar(2);
+
+log(scopeEval('var1')); // 5
+</code></pre>
+
+<h3>Extending the Target Scope</h3>
+
+<p>As you may have noticed, it's impossible to
+declare a new variable in the target scope, once it is created.
+This is because the eval happens in the function local scope described 
+by EVAL_LITERAL.
+This means that newly declared variables only exist for the duration of that 
+function's invocation:</p>
+
+<pre><code>// Here newvar exists:
+log(scopeEval('var newvar = 3; newvar')); // 3
+
+// ...but here it doesn't:
+scopeEval('newvar'); // Error: newvar is not defined
+</code></pre>
+
+<p>Instead, we create an inner scope where new variables are defined. </p>
+
+<pre><code>var newvars = ['newvar1', 'newvar2', ...];
+var innerEval = scopeEval('var ' + newvars.join(',') + ';' + EVAL_LITERAL);
+</code></pre>
+
+<p>Because we used <code>scopeEval</code> to create our lexical scope, innerEval and scopeEval 
+share variables var1, var2, etc. In addition, innerEval has it's own variables
+newvar1, newvar2, ...</p>
+
+<pre><code>// var1 is visible in both scopes
+innerEval('var1 = 6');
+log(scopeEval('var1'));      // 6
+
+// newvar1 is only visible in the inner scope
+innerEval('newvar1 = 'A');
+log(scopeEval('newvar1'));   // Error: newvar1 is not defined.
+</code></pre>
+
+<p>We might say that <code>innerEval</code> <em>extends</em> <code>scopeEval</code> because <code>innerEval</code> includes 
+<code>scopeEval</code>'s variables and declares new ones. </p>
+
+<p><code>scopeEval</code> is actually the <em>outer</em> lexical scope of <code>innerEval</code>, or rather the target 
+scopes of those two functions. A static view of the nested
+scopes we've created so far might look like this:</p>
+
+<pre><code>// GLOBAL SCOPE
+(function() {
+  // scopeEval's target scope
+  var var1, var2, ...;
+  (function () {
+    // innerEval's target scope
+    var newvar1, newvar2, ...;
+  })()
+})()
+</code></pre>
+
+<h2>API</h2>
+
+<p>I think we have covered enough concepts to make it easy to talk about what 
+ScopeJS does.</p>
+
+<p>For API documentation, have a look at the <a href="documentation/docs/scope.html">annotated source</a></p>
+
+<h2>CoffeeScript support</h2>
+
+<p>Every root scope defines all the coffeescript helpers that are currently generated by the CoffeeScript
+compiler. This means that recompiling functions that were once compiled from CoffeeScript will 
+work fine:</p>
+
+<pre><code># This is coffeescript
+scope.eval -&gt;
+   # invoke CoffeeScript's __bind runtime helper.
+   =&gt;
+</code></pre>
+
+<p>If you have a string of CoffeeScript code that you want to compile or run inside a target scope,
+use <code>CoffeeScript.compile code, bare:true</code> to compile <code>code</code> first. 'Native' CoffeeScript eval/compile
+support could be envisioned for the future.</p>
+
+<p>One important caveat when <strong>setting a variable in the target scope</strong> inside a CoffeeScript function: 
+The CoffeeScript compiler does lexical analysis around a function to decide if a variable has been seen
+before or if it needs to be declared inside the function. 
+So, unless you have a local variable with the same name in the current scope, the CoffeeScript compiler will 
+declare a variable with that name inside your function, even if that variable exists in the target scope.
+This function-local variable will mask the one in the target scope:</p>
+
+<pre><code>scope = Scope.create
+  locals:
+    foo: 3
+  compile:
+    # Won't have the desired effect.
+    setFoo: (val) -&gt; foo = val
+</code></pre>
+
+<p>In the above code, calling <code>scope.setFoo 4</code> will have no effect since, in the current scope,
+ CoffeeScript compiles <code>(val) -&gt; foo = val</code> to </p>
+
+<pre><code>function(val) {
+  var foo;
+  return foo = val;
+}
+</code></pre>
+
+<p>A fix which analyzes decompiled CoffeeScript functions is possible.</p>
 </body>
 </html>
