@@ -4,6 +4,7 @@
   "keywords":     ["scope", "lexical", "DSL", "coffeescript"],
   "author":       "Derek Brans <dbrans@gmail.com>",
   "version":      "0.8.1",
+  "homepage":     "scopejs.org",
   "licenses":     [{
     "type":       "MIT",
     "url":        "http://github.com/dbrans/scopejs/raw/master/LICENSE"

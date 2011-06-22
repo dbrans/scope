@@ -14,7 +14,7 @@
 <h2>Contents</h2>
 
 <ul>
-<li><a href="#useage">Installation and Useage</a></li>
+<li><a href="#usage">Installation and Usage</a></li>
 <li><a href="#theory">Theory</a></li>
 <li><a href="#api">API</a></li>
 <li><a href="documentation/docs/scope.html">Annotated Source</a></li>
@@ -61,7 +61,7 @@ log(scope.eval('bar')); // Error: bar is not defined.
 
 <p><a href="http://github.com/dbrans/scopejs">Scopejs is hosted on github</a>.</p>
 
-<p><div id="useage"></div></p>
+<p><div id="usage"></div></p>
 
 <h2>Installation</h2>
 
@@ -257,10 +257,7 @@ scopes we've created so far might look like this:</p>
 
 <h2>API</h2>
 
-<p>I think we have covered enough concepts to make it easy to talk about what 
-ScopeJS does.</p>
-
-<p>For API documentation, have a look at the <a href="documentation/docs/scope.html">annotated source</a></p>
+<p>For API documentation, please refer to the <a href="documentation/docs/scope.html">annotated source</a></p>
 
 <p><div id="coffee"></div></p>
 
@@ -277,7 +274,12 @@ scope.eval -&gt;
 </code></pre>
 
 <p>If you have a string of CoffeeScript code that you want to compile or run inside a target scope,
-use <code>CoffeeScript.compile code, bare:true</code> to compile <code>code</code> first. 'Native' CoffeeScript eval/compile
+use </p>
+
+<pre><code>CoffeeScript.compile code, bare:true 
+</code></pre>
+
+<p>to compile <code>code</code> first. 'Native' CoffeeScript eval/compile
 support could be envisioned for the future.</p>
 
 <p>One important caveat when <strong>setting a variable in the target scope</strong> inside a CoffeeScript function: 

@@ -2,7 +2,7 @@
 A library for defining and working with lexical scopes.
 
 ## Contents
-- [Installation and Useage](#useage)
+- [Installation and Usage](#usage)
 - [Theory](#theory)
 - [API](#api)
 - [Annotated Source](documentation/docs/scope.html)
@@ -47,7 +47,7 @@ A library for defining and working with lexical scopes.
 
 [Scopejs is hosted on github](http://github.com/dbrans/scopejs).
 
-~anchor:useage
+~anchor:usage
 ## Installation
 
 There are two ways to install scopejs: via npm or via git.
@@ -216,10 +216,7 @@ scopes we've created so far might look like this:
     
 ~anchor:api
 ## API
-I think we have covered enough concepts to make it easy to talk about what 
-ScopeJS does.
-
-For API documentation, have a look at the [annotated source](documentation/docs/scope.html)
+For API documentation, please refer to the [annotated source](documentation/docs/scope.html)
 
 ~anchor:coffee
 ## CoffeeScript support
@@ -233,7 +230,11 @@ work fine:
        =>
 
 If you have a string of CoffeeScript code that you want to compile or run inside a target scope,
-use `CoffeeScript.compile code, bare:true` to compile `code` first. 'Native' CoffeeScript eval/compile
+use 
+
+    CoffeeScript.compile code, bare:true 
+
+to compile `code` first. 'Native' CoffeeScript eval/compile
 support could be envisioned for the future.
        
 One important caveat when __setting a variable in the target scope__ inside a CoffeeScript function: 
