@@ -1,12 +1,12 @@
 {
   "name":         "scopejs",
-  "description":  "An object-oriented library for defining and working with lexical scopes.",
+  "description":  "A library for defining and working with lexical scopes.",
   "keywords":     ["coffeescript", "javascript", "DSL", "scope"],
   "author":       "Derek Brans <dbrans@gmail.com>",
   "version":      "0.8.0",
   "licenses":     [{
     "type":       "MIT",
-    "url":        "http://github.com/dbrans/jot/raw/master/LICENSE"
+    "url":        "http://github.com/dbrans/scopejs/raw/master/LICENSE"
   }],
   "engines":      {
     "node":       ">=0.2.5"
