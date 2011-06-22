@@ -1,6 +1,6 @@
 {
   "name":         "scopejs",
-  "description":  "A library for defining and working with lexical scopes.",
+  "description":  "A library for defining and working with lexical scopes in JavaScript.",
   "keywords":     ["coffeescript", "javascript", "DSL", "scope"],
   "author":       "Derek Brans <dbrans@gmail.com>",
   "version":      "0.8.0",

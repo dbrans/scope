@@ -29,6 +29,7 @@ task 'doc', 'Build ScopeJS Documentation', ->
     {Showdown} = require './documentation/vendor/showdown'
     md = fs.readFileSync './documentation/index.md', 'utf8'
     html = Showdown.makeHtml md
+    html = html.replace /~anchor:(\w+)/g, '<div id="$1"></div>'
     index = """
       <!DOCTYPE html> 
       <html> 
