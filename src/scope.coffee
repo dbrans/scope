@@ -31,7 +31,7 @@ exports.Scope = class Scope
   # #### Scope.eval(expr)
   # A function to eval a given expression safely wrapped in a function
   # in the global scope.
-  # 
+  #    
   # `Scope.eval(expr)` has these properties:
   # 
   # 1. `Scope.eval("var x")` will not declare a new global. 
@@ -39,13 +39,13 @@ exports.Scope = class Scope
   # 2. `Scope.eval("x")` will not return the value of `x` in the 
   # current scope. Whereas `eval("x")` will.
   # 
-  # `Scope.eval` provides the outer scope for all scopes in Scopejs.
+  # `Scope.eval` provides the outer scope for all scoped evals.
   @eval = `(1, eval)(EVAL_LITERAL)`
 
   # #### Scope.literalize(x)
   # Return a literal expression for `x`
   @literalize = literalize = (x) ->
-    # A string is a literal expression of some other value.
+    # A string must already be an expression.
     if isString x then x
     else if isFn x 
       # 'Decompile' a function using `Function::toString` (where supported)
@@ -54,7 +54,7 @@ exports.Scope = class Scope
       x = x.replace /function[^\(]*\(/, "function ("
       "(#{x})"
     # Otherwise, `x` must literalize itself.
-    else x.literal()
+    else x.literalize()
 
   # #### Class properties intended to be overridden.
   
@@ -101,7 +101,7 @@ exports.Scope = class Scope
   # Returns a scope that extends the root scope
   # of this class. 
   # 
-  # See constructor for description of options.
+  # See `constructor` for description of options.
   @create = (options) -> @root.extend options
 
   # #### constructor(options)
@@ -150,14 +150,14 @@ exports.Scope = class Scope
     names.push name for name of @options[k] for k in varTypes
     throw 'Reserved' for n in names when n in @constructor.reserved
     @names = names.concat @parent?.names or []
-    # Create this scope's 'scoped eval'
+    # Compile the 'scoped eval'
     @_eval = 
       unless @parent? then Scope.eval
       else
         # Concatenate and assign all local literals
         literals = (for name, val of @options.literals
           "var #{name} = #{literalize val};\n").join('')
-        # Eval `expr` in the parent scope with local values.
+        # Eval `literals` in the parent scope with `@options.locals`.
         @parent.eval @options, literals + EVAL_LITERAL
     # #####Exports
     # Exports allow direct access to locals inside the scope via
@@ -197,11 +197,11 @@ exports.Scope = class Scope
   # 
   # ##### Argument Decompilation
   # The `expr` argument need not be a string: it can also be a function or 
-  # an object that defines a `literal` method. See `Scope.literalize`.
+  # an object that defines a `literalize` method. See `Scope.literalize`.
   # This means that you can recompile a function in another scope like this:
   #    
-  #    var getXFromScope = scope.eval(function(){return x});
-  #    log(getXFromScope()); // Prints the current value of x in the scope.
+  #     var getXFromScope = scope.eval(function(){return x});
+  #     log(getXFromScope()); // Prints the current value of x in the scope.
   #    
   eval: (ctx, expr) -> 
     [ctx, expr] = [{}, ctx] unless expr
@@ -216,7 +216,7 @@ exports.Scope = class Scope
   # 'Run' a function in this scope. i.e., `literalize`, `eval` and `call`
   # the given function within this scope.
   #    
-  #    log(scope.run(function(){return x})); // Prints the current value of x in the scope.
+  #     log(scope.run(function(){return x})); // Prints the current value of x in the scope.
   # 
   run: (ctx, fn) -> 
     [ctx, fn] = [{}, ctx] unless fn
@@ -224,7 +224,7 @@ exports.Scope = class Scope
 
   # #### Scope::extend(options)
   # Create a new scope that extends this one, with the given options.
-  # See `constructor` for a list 
+  # See `constructor` for a list of options.
   extend: (options = {}) -> new @constructor extend options, parent: @
      
   #Initialize this class

@@ -57,7 +57,7 @@ exports.Scope = Scope = (function() {
       x = x.replace(/function[^\(]*\(/, "function (");
       return "(" + x + ")";
     } else {
-      return x.literal();
+      return x.literalize();
     }
   };
   Scope.rootLocals = {
