@@ -47,8 +47,38 @@ task 'doc', 'Build ScopeJS Documentation', ->
     
     fs.writeFileSync 'index.html', index
     
-  
-  
+
+task 'install', 'install ScopeJS into /usr/local', (options) ->
+  base = '/usr/local'
+  lib  = "#{base}/lib/scope"
+  node = "/usr/local/lib/node_modules/"
+  console.log   "Installing ScopeJS to #{lib}"
+  console.log   "Linking to #{node}"
+  exec([
+    "mkdir -p #{lib}"
+    "cp -rf lib LICENSE README.md index.js package.json src #{lib}"
+    "mkdir -p #{node}"
+    "ln -sfn #{lib} #{node}"
+  ].join(' && '), (err, stdout, stderr) ->
+    if err then console.log stderr.trim() else log 'done', green
+  )
+
+
+task 'uninstall', 'uninstall ScopeJS from /usr/local', ->
+  base = '/usr/local'
+  lib  = "#{base}/lib/scope"
+  node = "/usr/local/lib/node_modules"
+  console.log   "Uninstall ScopeJS from #{lib}"
+  console.log   "unlinking from #{node}"
+  exec([
+    "rm -rf #{lib}"
+    "rm #{node}/scope"
+  ].join(' && '), (err, stdout, stderr) ->
+    if err then console.log stderr.trim() else log 'done', green
+  )
+
+
+
 # Prepare this project to run in the browser.
 buildForBrowser = ({dir, out, init, vendor}) ->
 

@@ -56,7 +56,7 @@ There are two ways to install ScopeJS: via npm or via git.
 
 ### NPM
 
-1. If you haven't already, [Install npm](http://howtonode.org/introduction-to-npm). 
+1. If you haven't already, [install npm](http://howtonode.org/introduction-to-npm). 
 2. `npm install -g scope`
 (Leave off the -g if you don't wish to install globally.)
 
@@ -177,7 +177,7 @@ by EVAL_LITERAL.
 This means that newly declared variables only exist for the duration of that 
 function's invocation:
 
-    // Here newvar exists:
+    // Here 'newvar' exists:
     log(scopeEval('var newvar = 3; newvar')); // 3
     
     // ...but here it doesn't:
