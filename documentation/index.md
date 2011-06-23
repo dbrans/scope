@@ -1,7 +1,9 @@
 # ScopeJS
-A library for defining and working with lexical scopes.
+_Pimp your Lexical Scopes._
 
-## Contents
+A JavaScript library for defining and working with lexical scopes.
+
+## Table of Contents
 - [Installation and Usage](#usage)
 - [Theory](#theory)
 - [API](#api)

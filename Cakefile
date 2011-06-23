@@ -35,7 +35,7 @@ task 'doc', 'Build ScopeJS Documentation', ->
       <html> 
       <head> 
         <meta http-equiv="content-type" content="text/html;charset=UTF-8" /> 
-        <title>ScopeJS</title>
+        <title>ScopeJS: Pimp your lexical scopes.</title>
         <link rel="stylesheet" type="text/css" href="documentation/css/doc.css" /> 
         <link rel="shortcut icon" href="documentation/images/favicon.ico" /> 
       </head>
