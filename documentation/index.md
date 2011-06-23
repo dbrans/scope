@@ -14,13 +14,11 @@ A JavaScript library for defining and working with lexical scopes.
 
     // Create a new lexical scope
     var scope = Scope.create({
-        locals: {foo: 3},
-        literals: {
-          multiplyFoo: function(val) {
-            foo = foo * val;
-          }
-        }
-      });
+      locals: {foo: 3},
+      literals: {
+        multiplyFoo: function(val) {foo *= val;}
+      }
+    });
     
     // Call a local function.
     scope.multiplyFoo(4);
@@ -33,9 +31,9 @@ A JavaScript library for defining and working with lexical scopes.
     
     // Extend a scope.
     var inner = scope.extend({
-        locals: {bar: 'bar'}
-      });
-      
+      locals: {bar: 'bar'}
+    });
+    
     // Inner scope has access to the outer scope:
     inner.foo = 6;    
     log(scope.foo));        // 6
