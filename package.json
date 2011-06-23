@@ -5,10 +5,10 @@
   "author":       "Derek Brans <dbrans@gmail.com>",
   "version":      "0.8.1",
   "homepage":     "http://scopejs.org",
-  "bugs":         { "web" : "github.com/dbrans/scopejs/issues"},
+  "bugs":         { "web" : "github.com/dbrans/scope/issues"},
   "licenses":     [{
     "type":       "MIT",
-    "url":        "github.com/dbrans/scopejs/raw/master/LICENSE"
+    "url":        "github.com/dbrans/scope/raw/master/LICENSE"
   }],
   "engines":      {
     "node":       ">=0.2.5"
@@ -19,6 +19,6 @@
   },
   "repository":   {
     "type": "git",
-    "url": "git://github.com/dbrans/scopejs.git"
+    "url": "git://github.com/dbrans/scope.git"
   }
 }
