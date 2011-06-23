@@ -3,6 +3,8 @@ _Pimp your Lexical Scopes._
 
 A JavaScript library for defining and working with lexical scopes.
 
+[ScopeJS is hosted on github](http://github.com/dbrans/scope).
+
 ## Table of Contents
 - [Installation and Usage](#usage)
 - [Theory](#theory)
@@ -40,8 +42,6 @@ A JavaScript library for defining and working with lexical scopes.
     
     // But outer scope does not have access to the inner scope:
     log(scope.eval('bar')); // Error: bar is not defined.
-
-[ScopeJS is hosted on github](http://github.com/dbrans/scope).
 
 ~anchor:usage
 ## Installation
