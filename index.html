@@ -61,19 +61,20 @@ log(scope.foo));        // 6
 log(scope.eval('bar')); // Error: bar is not defined.
 </code></pre>
 
-<p><a href="http://github.com/dbrans/scopejs">Scopejs is hosted on github</a>.</p>
+<p><a href="http://github.com/dbrans/scope">ScopeJS is hosted on github</a>.</p>
 
 <p><div id="usage"></div></p>
 
 <h2>Installation</h2>
 
-<p>There are two ways to install scopejs: via npm or via git.</p>
+<p>There are two ways to install ScopeJS: via npm or via git.</p>
 
 <h3>NPM</h3>
 
 <ol>
 <li>If you haven't already, <a href="http://howtonode.org/introduction-to-npm">Install npm</a>. </li>
-<li><code>npm install scopejs</code></li>
+<li><code>npm install -g scope</code>
+(Leave off the -g if you don't wish to install globally.)</li>
 </ol>
 
 <h3>Git</h3>
@@ -82,8 +83,8 @@ log(scope.eval('bar')); // Error: bar is not defined.
 
 <p>Then run:</p>
 
-<pre><code>git clone git://github.com/dbrans/scopejs.git
-cd scopejs
+<pre><code>git clone git://github.com/dbrans/scope.git
+cd scope
 cake install
 </code></pre>
 
@@ -91,7 +92,7 @@ cake install
 
 <h3>CommonJS Environment (e.g., Nodejs)</h3>
 
-<pre><code>var Scope = require('scopejs').Scope;
+<pre><code>var Scope = require('scope').Scope;
 var scope = Scope.create(...);
 </code></pre>
 
@@ -99,7 +100,7 @@ var scope = Scope.create(...);
 
 <p>Include <code>browser/scope.js</code> in your html page:</p>
 
-<pre><code>&lt;script type="text/javascript" src="PATH_TO_SCOPEJS/browser/scope.js"&gt;&lt;/script&gt;
+<pre><code>&lt;script type="text/javascript" src="PATH_TO_SCOPE/browser/scope.js"&gt;&lt;/script&gt;
 </code></pre>
 
 <p><code>browser/scope.js</code> defines <code>Scope</code> as a global variable. So you can just go
@@ -110,7 +111,7 @@ ahead and use it:</p>
 
 <h2>Community</h2>
 
-<p>Please use the <a href="http://github.com/dbrans/scopejs">github page for ScopeJS</a>
+<p>Please use the <a href="http://github.com/dbrans/scope">github page for ScopeJS</a>
 to discuss and raise issues about ScopeJS.</p>
 
 <p><div id="theory"></div></p>

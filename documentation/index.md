@@ -47,38 +47,40 @@ A JavaScript library for defining and working with lexical scopes.
     // But outer scope does not have access to the inner scope:
     log(scope.eval('bar')); // Error: bar is not defined.
 
-[Scopejs is hosted on github](http://github.com/dbrans/scopejs).
+[ScopeJS is hosted on github](http://github.com/dbrans/scope).
 
 ~anchor:usage
 ## Installation
 
-There are two ways to install scopejs: via npm or via git.
+There are two ways to install ScopeJS: via npm or via git.
 
 ### NPM
 
 1. If you haven't already, [Install npm](http://howtonode.org/introduction-to-npm). 
-2. `npm install scopejs`
+2. `npm install -g scope`
+(Leave off the -g if you don't wish to install globally.)
+
 
 ### Git
 To install from source, you should have [CoffeeScript](http://coffeescript.org) installed.
 
 Then run:
 
-    git clone git://github.com/dbrans/scopejs.git
-    cd scopejs
+    git clone git://github.com/dbrans/scope.git
+    cd scope
     cake install
 
 ## Including ScopeJS in your project.
 
 ### CommonJS Environment (e.g., Nodejs)
 
-    var Scope = require('scopejs').Scope;
+    var Scope = require('scope').Scope;
     var scope = Scope.create(...);
 
 ### Browser Environment
 Include `browser/scope.js` in your html page:
 
-    <script type="text/javascript" src="PATH_TO_SCOPEJS/browser/scope.js"></script>
+    <script type="text/javascript" src="PATH_TO_SCOPE/browser/scope.js"></script>
 
 `browser/scope.js` defines `Scope` as a global variable. So you can just go
 ahead and use it:
@@ -86,7 +88,7 @@ ahead and use it:
     var scope = Scope.create(...);
 
 ## Community
-Please use the [github page for ScopeJS](http://github.com/dbrans/scopejs)
+Please use the [github page for ScopeJS](http://github.com/dbrans/scope)
 to discuss and raise issues about ScopeJS.
 
 ~anchor:theory
