@@ -14,9 +14,7 @@ A JavaScript library for defining and working with lexical scopes.
 
     // Create a new lexical scope
     var scope = Scope.create({
-        values: {
-          foo: 3
-        },
+        locals: {foo: 3},
         literals: {
           multiplyFoo: function(val) {
             foo = foo * val;
@@ -35,9 +33,7 @@ A JavaScript library for defining and working with lexical scopes.
     
     // Extend a scope.
     var inner = scope.extend({
-        values: {
-          bar: 'bar'
-        }
+        locals: {bar: 'bar'}
       });
       
     // Inner scope has access to the outer scope:
@@ -249,7 +245,7 @@ declare a variable with that name inside your function, even if that variable ex
 This function-local variable will mask the one in the target scope:
 
     scope = Scope.create
-      values:
+      locals:
         foo: 3
       literals:
         # Won't have the desired effect.

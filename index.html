@@ -27,9 +27,7 @@
 
 <pre><code>// Create a new lexical scope
 var scope = Scope.create({
-    values: {
-      foo: 3
-    },
+    locals: {foo: 3},
     literals: {
       multiplyFoo: function(val) {
         foo = foo * val;
@@ -48,9 +46,7 @@ log(scope.foo); // 13
 
 // Extend a scope.
 var inner = scope.extend({
-    values: {
-      bar: 'bar'
-    }
+    locals: {bar: 'bar'}
   });
 
 // Inner scope has access to the outer scope:
@@ -72,7 +68,7 @@ log(scope.eval('bar')); // Error: bar is not defined.
 <h3>NPM</h3>
 
 <ol>
-<li>If you haven't already, <a href="http://howtonode.org/introduction-to-npm">Install npm</a>. </li>
+<li>If you haven't already, <a href="http://howtonode.org/introduction-to-npm">install npm</a>. </li>
 <li><code>npm install -g scope</code>
 (Leave off the -g if you don't wish to install globally.)</li>
 </ol>
@@ -212,7 +208,7 @@ by EVAL_LITERAL.
 This means that newly declared variables only exist for the duration of that 
 function's invocation:</p>
 
-<pre><code>// Here newvar exists:
+<pre><code>// Here 'newvar' exists:
 log(scopeEval('var newvar = 3; newvar')); // 3
 
 // ...but here it doesn't:
@@ -293,7 +289,7 @@ declare a variable with that name inside your function, even if that variable ex
 This function-local variable will mask the one in the target scope:</p>
 
 <pre><code>scope = Scope.create
-  values:
+  locals:
     foo: 3
   literals:
     # Won't have the desired effect.

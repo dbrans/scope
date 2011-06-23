@@ -58,8 +58,8 @@ exports.Scope = class Scope
 
   # #### Class properties intended to be overridden.
   
-  # These values are defined in the root scope.
-  @rootValues =
+  # These locals are defined in the root scope.
+  @rootLocals =
     # CoffeeScript runtime helpers
     __slice: Array::slice
     __bind: (fn, me) -> -> fn.apply me, arguments
@@ -94,8 +94,8 @@ exports.Scope = class Scope
     
     # Create a root scope for this class. 
     # All scopes may extend this scope.
-    # It contains the rootValues.
-    @root = @global.extend values: @rootValues
+    # It contains the rootLocals.
+    @root = @global.extend locals: @rootLocals
   
   # #### Scope.create(options)
   # Returns a scope that extends the root scope
@@ -108,17 +108,17 @@ exports.Scope = class Scope
   # Called with no arguments: creates a global scope.
   # 
   # There are two ways to define
-  # local variables in the new scope: using _values_
+  # local variables in the new scope: using _locals_
   # and _literals_.
   # 
-  # ##### *param*: `options.values` 
+  # ##### *param*: `options.locals` 
   # Describes local variable names and values to be declared and set 
   # in the target scope.
   # 
   #     var foo = {};
   #     
   #     var scope = Scope.create({
-  #       values: {foo: foo}
+  #       locals: {foo: foo}
   #     });
   # 
   #     log(scope.eval('foo') === foo); // true
@@ -128,7 +128,7 @@ exports.Scope = class Scope
   # literal expressions eval'd in the target scope.
   # 
   #     scope = Scope.create({
-  #       values: {foo: 3},
+  #       locals: {foo: 3},
   #       literals: {
   #         getFoo: "function(){return foo}"
   #       }
@@ -137,13 +137,13 @@ exports.Scope = class Scope
   #     log(scope.eval('foo')); // 3
   constructor: (@options = {}) ->
     # The types of variables in options.
-    varTypes = ['values', 'literals']
+    varTypes = ['locals', 'literals']
     # Normalize options.
     @options[k] ?= {} for k in varTypes
     # #####The `__scope` local variable
     # Within the target scope, `__scope` refers to the Scope object for that 
     # target scope.
-    @options.values.__scope = @
+    @options.locals.__scope = @
     {@parent} = @options
     # Register variable names declared in options.
     names = []
@@ -158,12 +158,12 @@ exports.Scope = class Scope
         literals = (for name, val of @options.literals
           "var #{name} = #{literalize val};\n").join('')
         # Eval `expr` in the parent scope with local values.
-        @parent.eval {locals: @options.values}, literals + EVAL_LITERAL
+        @parent.eval @options, literals + EVAL_LITERAL
     # #####Exports
-    # Exports allow direct access to values inside the scope via
+    # Exports allow direct access to locals inside the scope via
     # getters and setters (where support exists):
     # 
-    #     var scope = Scope.create({values: {foo: 0}});
+    #     var scope = Scope.create({locals: {foo: 0}});
     # 
     #     // Set a local variable inside the target scope (setters are by reference).
     #     scope.eval.foo = 5;
@@ -193,7 +193,7 @@ exports.Scope = class Scope
   # The optional `ctx` parameter serves as the value of `this`
   # for the eval of `expr`.
   # 
-  # `ctx.locals` may define additional local values visible only to `expr`.
+  # `ctx.locals` may define additional locals visible only to `expr`.
   # 
   # ##### Argument Decompilation
   # The `expr` argument need not be a string: it can also be a function or 
