@@ -3,7 +3,7 @@
   "description":  "Define and work with lexical scopes.",
   "keywords":     ["scope", "lexical", "DSL", "coffeescript"],
   "author":       "Derek Brans <dbrans@gmail.com>",
-  "version":      "0.8.1",
+  "version":      "0.8.2",
   "homepage":     "http://scopejs.org",
   "bugs":         { "web" : "github.com/dbrans/scope/issues"},
   "licenses":     [{

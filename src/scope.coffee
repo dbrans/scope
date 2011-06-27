@@ -1,6 +1,6 @@
 # File header.
 ###
- * Scopejs v0.8.0
+ * Scopejs v0.8.2
  * http://scopejs.org
  *
  * Copyright(c) 2011 Derek Brans <dbrans@gmail.com>
