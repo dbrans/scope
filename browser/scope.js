@@ -103,14 +103,12 @@ exports.Scope = Scope = (function() {
   Scope.reserved = ['__expr'];
   Scope.makeGetter = function(name) {
     return function() {
-      return this._eval(name);
+      return this.get(name);
     };
   };
   Scope.makeSetter = function(name) {
     return function(val) {
-      return this._eval.call({
-        val: val
-      }, "" + name + " = this.val");
+      return this.set(name, val, false);
     };
   };
   Scope.initialize = function() {
@@ -211,6 +209,25 @@ exports.Scope = Scope = (function() {
       _ref = [{}, ctx], ctx = _ref[0], fn = _ref[1];
     }
     return this.eval(ctx, "" + (literalize(fn)) + ".call(this)");
+  };
+  Scope.prototype.set = function(name, val, isLiteral) {
+    var obj, _len, _ref, _results;
+    if (isString(name)) {
+      return this._eval.call({
+        val: val
+      }, ("" + name + " = ") + (isLiteral ? literalize(val) : "this.val"));
+    } else {
+      _ref = [name, val], obj = _ref[0], isLiteral = _ref[1];
+      _results = [];
+      for (val = 0, _len = obj.length; val < _len; val++) {
+        name = obj[val];
+        _results.push(this.set(name, val, isLiteral));
+      }
+      return _results;
+    }
+  };
+  Scope.prototype.get = function(name) {
+    return this._eval(name);
   };
   Scope.prototype.extend = function(options) {
     if (options == null) {

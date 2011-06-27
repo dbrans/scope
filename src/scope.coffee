@@ -79,10 +79,8 @@ exports.Scope = class Scope
   @reserved = ['__expr']
             
   # Create a getters / setters for the given name.
-  @makeGetter = (name) -> 
-    -> @_eval name
-  @makeSetter = (name) -> 
-    (val) -> @_eval.call {val}, "#{name} = this.val"
+  @makeGetter = (name) ->       -> @get name
+  @makeSetter = (name) -> (val) -> @set name, val, false
   
   # #### Class initializer
   # Call this function at the end of your Scope subclass to
@@ -221,6 +219,22 @@ exports.Scope = class Scope
   run: (ctx, fn) -> 
     [ctx, fn] = [{}, ctx] unless fn
     @eval ctx, "#{literalize fn}.call(this)"
+
+  # #### Scope::set(name, val, isLiteral)
+  # Set local variable to value.
+  # `if isLiteral then literalize val`.
+  # 
+  # To set multiple values: `Scope.set(obj, isLiteral)`
+  set: (name, val, isLiteral) ->
+    if isString name then @_eval.call {val}, "#{name} = " + 
+      (if isLiteral then literalize val else "this.val")
+    else 
+      [obj, isLiteral] = [name, val]
+      @set name, val, isLiteral for name, val in obj
+      
+  # #### Scope::get(name)
+  # Get a local value from this scope.
+  get: (name) -> @_eval name
 
   # #### Scope::extend(options)
   # Create a new scope that extends this one, with the given options.
