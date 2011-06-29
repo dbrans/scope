@@ -14,7 +14,7 @@
   };define('./scope', (function exports() {
 var exports = this;
 /*
- * Scopejs v0.8.0
+ * Scopejs v0.9.0
  * http://scopejs.org
  *
  * Copyright(c) 2011 Derek Brans <dbrans@gmail.com>
@@ -48,6 +48,9 @@ extend = function() {
 exports.Scope = Scope = (function() {
   var EVAL_LITERAL, literalize;
   EVAL_LITERAL = "(function(__expr){return eval(__expr)})";
+  Scope.prototype.literal = function() {
+    return EVAL_LITERAL;
+  };
   Scope.eval = (1, eval)(EVAL_LITERAL);
   Scope.literalize = literalize = function(x) {
     if (isString(x)) {
@@ -57,7 +60,7 @@ exports.Scope = Scope = (function() {
       x = x.replace(/function[^\(]*\(/, "function (");
       return "(" + x + ")";
     } else {
-      return x.literalize();
+      return x.literal();
     }
   };
   Scope.rootLocals = {
@@ -121,7 +124,7 @@ exports.Scope = Scope = (function() {
     return this.root.extend(options);
   };
   function Scope(options) {
-    var C, exports, k, literals, n, name, names, val, varTypes, x, _base, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _m, _n, _ref, _ref2;
+    var C, exports, k, n, name, names, varTypes, x, _base, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _m, _n, _ref, _ref2, _ref3;
     this.options = options != null ? options : {};
     varTypes = ['locals', 'literals'];
     for (_i = 0, _len = varTypes.length; _i < _len; _i++) {
@@ -146,22 +149,13 @@ exports.Scope = Scope = (function() {
       }
     }
     this.names = names.concat(((_ref2 = this.parent) != null ? _ref2.names : void 0) || []);
-    this._eval = this.parent == null ? Scope.eval : (literals = ((function() {
-      var _ref3, _results;
-      _ref3 = this.options.literals;
-      _results = [];
-      for (name in _ref3) {
-        val = _ref3[name];
-        _results.push("var " + name + " = " + (literalize(val)) + ";\n");
-      }
-      return _results;
-    }).call(this)).join(''), this.parent.eval(this.options, literals + EVAL_LITERAL));
+    this._eval = ((_ref3 = this.parent) != null ? _ref3.eval(this.options, this) : void 0) || Scope.eval;
     exports = (function() {
-      var _l, _len4, _ref3, _results;
-      _ref3 = this.names;
+      var _l, _len4, _ref4, _results;
+      _ref4 = this.names;
       _results = [];
-      for (_l = 0, _len4 = _ref3.length; _l < _len4; _l++) {
-        x = _ref3[_l];
+      for (_l = 0, _len4 = _ref4.length; _l < _len4; _l++) {
+        x = _ref4[_l];
         if (!x.match(/^_/)) {
           _results.push(x);
         }
@@ -188,20 +182,32 @@ exports.Scope = Scope = (function() {
       }
     }
   }
-  Scope.prototype.eval = function(ctx, expr) {
-    var locals, name, _ref;
+  Scope.prototype.context = null;
+  Scope.prototype.eval = function(context, expr) {
+    var literals, locals, name, val, _ref;
+    this.context = context;
     if (!expr) {
-      _ref = [{}, ctx], ctx = _ref[0], expr = _ref[1];
+      _ref = [{}, this.context], this.context = _ref[0], expr = _ref[1];
     }
-    locals = ctx.locals ? ((function() {
+    locals = this.context.locals ? ((function() {
       var _results;
       _results = [];
-      for (name in ctx.locals) {
+      for (name in this.context.locals) {
         _results.push("var " + name + " = this.locals." + name + ";\n");
       }
       return _results;
-    })()).join('') : "";
-    return this._eval.call(ctx, locals + literalize(expr));
+    }).call(this)).join('') : "";
+    literals = this.context.literals ? ((function() {
+      var _ref2, _results;
+      _ref2 = this.context.literals;
+      _results = [];
+      for (name in _ref2) {
+        val = _ref2[name];
+        _results.push("var " + name + " = " + (literalize(val)) + ";\n");
+      }
+      return _results;
+    }).call(this)).join('') : "";
+    return this._eval.call(this.context, locals + literals + literalize(expr));
   };
   Scope.prototype.run = function(ctx, fn) {
     var _ref;

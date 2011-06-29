@@ -1,6 +1,6 @@
 # File header.
 ###
- * Scopejs v0.8.2
+ * Scopejs v0.9.0
  * http://scopejs.org
  *
  * Copyright(c) 2011 Derek Brans <dbrans@gmail.com>
@@ -25,6 +25,7 @@ exports.Scope = class Scope
   
   # The 'scoped eval' literal.
   EVAL_LITERAL = "(function(__expr){return eval(__expr)})"
+  literal: -> EVAL_LITERAL
 
   # ### Class methods
   
@@ -54,7 +55,7 @@ exports.Scope = class Scope
       x = x.replace /function[^\(]*\(/, "function ("
       "(#{x})"
     # Otherwise, `x` must literalize itself.
-    else x.literalize()
+    else x.literal()
 
   # #### Class properties intended to be overridden.
   
@@ -149,14 +150,7 @@ exports.Scope = class Scope
     throw 'Reserved' for n in names when n in @constructor.reserved
     @names = names.concat @parent?.names or []
     # Compile the 'scoped eval'
-    @_eval = 
-      unless @parent? then Scope.eval
-      else
-        # Concatenate and assign all local literals
-        literals = (for name, val of @options.literals
-          "var #{name} = #{literalize val};\n").join('')
-        # Eval `literals` in the parent scope with `@options.locals`.
-        @parent.eval @options, literals + EVAL_LITERAL
+    @_eval = @parent?.eval(@options, @) or Scope.eval      
     # #####Exports
     # Exports allow direct access to locals inside the scope via
     # getters and setters (where support exists):
@@ -185,13 +179,16 @@ exports.Scope = class Scope
       @[x] = C.makeGetter(x)() for x in exports
 
   
-  # #### Scope::eval(ctx, expr)
+  # The current value of `this` inside the eval.
+  context: null
+  
+  # #### Scope::eval(context, expr)
   # Evaluate an expression in this scope.
   # 
-  # The optional `ctx` parameter serves as the value of `this`
+  # The optional `context` parameter serves as the value of `this`
   # for the eval of `expr`.
   # 
-  # `ctx.locals` may define additional locals visible only to `expr`.
+  # `context.locals` may define additional locals visible only to `expr`.
   # 
   # ##### Argument Decompilation
   # The `expr` argument need not be a string: it can also be a function or 
@@ -201,14 +198,18 @@ exports.Scope = class Scope
   #     var getXFromScope = scope.eval(function(){return x});
   #     log(getXFromScope()); // Prints the current value of x in the scope.
   #    
-  eval: (ctx, expr) -> 
-    [ctx, expr] = [{}, ctx] unless expr
+  eval: (@context, expr) -> 
+    [@context, expr] = [{}, @context] unless expr
     locals = 
-      if ctx.locals then (for name of ctx.locals
+      if @context.locals then (for name of @context.locals
         "var #{name} = this.locals.#{name};\n").join ''
       else ""
-        
-    @_eval.call ctx, locals + literalize expr
+    literals = 
+      if @context.literals then (for name, val of @context.literals
+        "var #{name} = #{literalize val};\n").join ''
+      else ""
+    
+    @_eval.call @context, locals + literals + literalize expr
   
   # #### Scope::run(ctx, fn)
   # 'Run' a function in this scope. i.e., `literalize`, `eval` and `call`
