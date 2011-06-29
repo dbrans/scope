@@ -139,10 +139,10 @@ exports.Scope = class Scope
     varTypes = ['locals', 'literals']
     # Normalize options.
     @options[k] ?= {} for k in varTypes
-    # #####The `__scope` local variable
-    # Within the target scope, `__scope` refers to the Scope object for that 
+    # #####The `__this` local variable
+    # Within the target scope, `__this` refers to the Scope object for that 
     # target scope.
-    @options.locals.__scope = @
+    @options.locals.__this = @
     {@parent} = @options
     # Register variable names declared in options.
     names = []

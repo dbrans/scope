@@ -133,7 +133,7 @@ exports.Scope = Scope = (function() {
         _base[k] = {};
       };
     }
-    this.options.locals.__scope = this;
+    this.options.locals.__this = this;
     this.parent = this.options.parent;
     names = [];
     for (_j = 0, _len2 = varTypes.length; _j < _len2; _j++) {
