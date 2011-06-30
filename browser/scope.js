@@ -14,7 +14,7 @@
   };define('./scope', (function exports() {
 var exports = this;
 /*
- * Scopejs v0.9.0
+ * Scopejs v0.10.0
  * http://scopejs.org
  *
  * Copyright(c) 2011 Derek Brans <dbrans@gmail.com>
@@ -214,7 +214,7 @@ exports.Scope = Scope = (function() {
     } else {
       for (_n = 0, _len6 = exports.length; _n < _len6; _n++) {
         x = exports[_n];
-        this[x] = C.makeGetter(x)();
+        this[x] = C.makeGetter(x).call(this);
       }
     }
   }

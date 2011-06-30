@@ -204,7 +204,7 @@ exports.Scope = class Scope
     else 
       # In environments where `__defineGetter__` and `__defineSetter__` 
       # are not supported, `@[name]` is set once when the scope is created.
-      @[x] = C.makeGetter(x)() for x in exports
+      @[x] = C.makeGetter(x).call @ for x in exports
 
   
   eval: @eval
