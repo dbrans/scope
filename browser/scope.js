@@ -20,7 +20,7 @@ var exports = this;
  * Copyright(c) 2011 Derek Brans <dbrans@gmail.com>
  * Released under the MIT License
 */
-var Scope, extend, isFn, isString;
+var COFFEESCRIPT_HELPERS, Scope, extend, isFn, isString;
 var __slice = Array.prototype.slice, __indexOf = Array.prototype.indexOf || function(item) {
   for (var i = 0, l = this.length; i < l; i++) {
     if (this[i] === item) return i;
@@ -45,13 +45,86 @@ extend = function() {
   }
   return x;
 };
+exports.COFFEESCRIPT_HELPERS = COFFEESCRIPT_HELPERS = {
+  "__slice": Array.prototype.slice,
+  "__bind": function(fn, me) {
+    return function() {
+      return fn.apply(me, arguments);
+    };
+  },
+  "__indexOf": Array.prototype.indexOf || function(item) {
+    var i, x;
+    if ((function() {
+      var _len, _results;
+      _results = [];
+      for (i = 0, _len = this.length; i < _len; i++) {
+        x = this[i];
+        _results.push(x === item);
+      }
+      return _results;
+    }).call(this)) {
+      return i;
+    }
+  },
+  "__hasProp": Object.prototype.hasOwnProperty,
+  "__extends": function(child, parent) {
+    var ctor, key, _results;
+    _results = [];
+    for (key in parent) {
+      if (eval('__hasProp').call(parent, key)) {
+        child[key] = parent[key];
+      }
+      ctor = function() {
+        return this.constructor = child;
+      };
+      ctor.prototype = parent.prototype;
+      child.prototype = new ctor;
+      child.__super__ = parent.prototype;
+      _results.push(child);
+    }
+    return _results;
+  }
+};
 exports.Scope = Scope = (function() {
   var EVAL_LITERAL, literalize;
   EVAL_LITERAL = "(function(__expr){return eval(__expr)})";
-  Scope.prototype.literal = function() {
-    return EVAL_LITERAL;
+  Scope._eval = (1, eval)(EVAL_LITERAL);
+  Scope.eval = function(context, expr, literalize_) {
+    var literals, locals, name, val, _ref;
+    if (literalize_ == null) {
+      literalize_ = literalize;
+    }
+    if (expr == null) {
+      _ref = [null, context], context = _ref[0], expr = _ref[1];
+    }
+    locals = (context != null ? context.locals : void 0) && ((function() {
+      var _results;
+      _results = [];
+      for (name in context.locals) {
+        _results.push("var " + name + " = this.locals." + name + ";\n");
+      }
+      return _results;
+    })()).join('') || "";
+    literals = (context != null ? context.literals : void 0) && ((function() {
+      var _ref2, _results;
+      _ref2 = context.literals;
+      _results = [];
+      for (name in _ref2) {
+        val = _ref2[name];
+        _results.push("var " + name + " = " + (literalize(val)) + ";\n");
+      }
+      return _results;
+    })()).join('') || "";
+    if (typeof this.set === "function") {
+      this.set('__context', context);
+    }
+    return this._eval.call(context, locals + literals + literalize_(expr));
   };
-  Scope.eval = (1, eval)(EVAL_LITERAL);
+  Scope.run = function(ctx, fn) {
+    return this.eval(ctx, fn, function(fn) {
+      return "" + (literalize(fn)) + ".call(this)";
+    });
+  };
   Scope.literalize = literalize = function(x) {
     if (isString(x)) {
       return x;
@@ -61,46 +134,6 @@ exports.Scope = Scope = (function() {
       return "(" + x + ")";
     } else {
       return x.literal();
-    }
-  };
-  Scope.rootLocals = {
-    "__slice": Array.prototype.slice,
-    "__bind": function(fn, me) {
-      return function() {
-        return fn.apply(me, arguments);
-      };
-    },
-    "__indexOf": Array.prototype.indexOf || function(item) {
-      var i, x;
-      if ((function() {
-        var _len, _results;
-        _results = [];
-        for (i = 0, _len = this.length; i < _len; i++) {
-          x = this[i];
-          _results.push(x === item);
-        }
-        return _results;
-      }).call(this)) {
-        return i;
-      }
-    },
-    "__hasProp": Object.prototype.hasOwnProperty,
-    "__extends": function(child, parent) {
-      var ctor, key, _results;
-      _results = [];
-      for (key in parent) {
-        if (eval('__hasProp').call(parent, key)) {
-          child[key] = parent[key];
-        }
-        ctor = function() {
-          return this.constructor = child;
-        };
-        ctor.prototype = parent.prototype;
-        child.prototype = new ctor;
-        child.__super__ = parent.prototype;
-        _results.push(child);
-      }
-      return _results;
     }
   };
   Scope.reserved = ['__expr'];
@@ -114,17 +147,17 @@ exports.Scope = Scope = (function() {
       return this.set(name, val, false);
     };
   };
-  Scope.initialize = function() {
-    this.global = new this();
-    return this.root = this.global.extend({
-      locals: this.rootLocals
-    });
-  };
+  Scope.root = new Scope({
+    locals: COFFEESCRIPT_HELPERS
+  });
   Scope.create = function(options) {
+    if (options == null) {
+      options = {};
+    }
     return this.root.extend(options);
   };
   function Scope(options) {
-    var C, exports, k, n, name, names, varTypes, x, _base, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _m, _n, _ref, _ref2, _ref3;
+    var C, exports, k, n, name, names, varTypes, x, _base, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _m, _n, _ref, _ref2;
     this.options = options != null ? options : {};
     varTypes = ['locals', 'literals'];
     for (_i = 0, _len = varTypes.length; _i < _len; _i++) {
@@ -135,6 +168,9 @@ exports.Scope = Scope = (function() {
     }
     this.options.locals.__this = this;
     this.parent = this.options.parent;
+    if (!this.parent) {
+      this.options.locals.__context = null;
+    }
     names = [];
     for (_j = 0, _len2 = varTypes.length; _j < _len2; _j++) {
       k = varTypes[_j];
@@ -149,13 +185,13 @@ exports.Scope = Scope = (function() {
       }
     }
     this.names = names.concat(((_ref2 = this.parent) != null ? _ref2.names : void 0) || []);
-    this._eval = ((_ref3 = this.parent) != null ? _ref3.eval(this.options, this) : void 0) || Scope.eval;
+    this._eval = (this.parent || Scope).eval(this.options, EVAL_LITERAL);
     exports = (function() {
-      var _l, _len4, _ref4, _results;
-      _ref4 = this.names;
+      var _l, _len4, _ref3, _results;
+      _ref3 = this.names;
       _results = [];
-      for (_l = 0, _len4 = _ref4.length; _l < _len4; _l++) {
-        x = _ref4[_l];
+      for (_l = 0, _len4 = _ref3.length; _l < _len4; _l++) {
+        x = _ref3[_l];
         if (!x.match(/^_/)) {
           _results.push(x);
         }
@@ -182,40 +218,8 @@ exports.Scope = Scope = (function() {
       }
     }
   }
-  Scope.prototype.context = null;
-  Scope.prototype.eval = function(context, expr) {
-    var literals, locals, name, val, _ref;
-    this.context = context;
-    if (!expr) {
-      _ref = [{}, this.context], this.context = _ref[0], expr = _ref[1];
-    }
-    locals = this.context.locals ? ((function() {
-      var _results;
-      _results = [];
-      for (name in this.context.locals) {
-        _results.push("var " + name + " = this.locals." + name + ";\n");
-      }
-      return _results;
-    }).call(this)).join('') : "";
-    literals = this.context.literals ? ((function() {
-      var _ref2, _results;
-      _ref2 = this.context.literals;
-      _results = [];
-      for (name in _ref2) {
-        val = _ref2[name];
-        _results.push("var " + name + " = " + (literalize(val)) + ";\n");
-      }
-      return _results;
-    }).call(this)).join('') : "";
-    return this._eval.call(this.context, locals + literals + literalize(expr));
-  };
-  Scope.prototype.run = function(ctx, fn) {
-    var _ref;
-    if (!fn) {
-      _ref = [{}, ctx], ctx = _ref[0], fn = _ref[1];
-    }
-    return this.eval(ctx, "" + (literalize(fn)) + ".call(this)");
-  };
+  Scope.prototype.eval = Scope.eval;
+  Scope.prototype.run = Scope.run;
   Scope.prototype.set = function(name, val, isLiteral) {
     var obj, _len, _ref, _results;
     if (isString(name)) {
@@ -239,11 +243,10 @@ exports.Scope = Scope = (function() {
     if (options == null) {
       options = {};
     }
-    return new this.constructor(extend(options, {
+    return new (options["class"] || this.constructor)(extend(options, {
       parent: this
     }));
   };
-  Scope.initialize();
   return Scope;
 })();
 }));  this.Scope = require('./scope').Scope

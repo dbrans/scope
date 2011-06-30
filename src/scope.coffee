@@ -1,6 +1,6 @@
 # File header.
 ###
- * Scopejs v0.9.0
+ * Scopejs v0.10.0
  * http://scopejs.org
  *
  * Copyright(c) 2011 Derek Brans <dbrans@gmail.com>
@@ -19,14 +19,29 @@ isFn = (x) -> !!(x and x.constructor and x.call and x.apply)
 # Extend object `x` with the properties of all objects in `more`
 extend = (x, more...) -> (x[k] = v for k,v of o) for o in more; x
 
+# CoffeeScript runtime helpers
+exports.COFFEESCRIPT_HELPERS = COFFEESCRIPT_HELPERS =
+  __slice: Array::slice
+  __bind: (fn, me) -> -> fn.apply me, arguments
+  __indexOf: Array::indexOf or (item) ->
+    return i if x is item for x, i in @
+  __hasProp: Object::hasOwnProperty
+  __extends: (child, parent) ->
+    for key of parent
+      child[key] = parent[key] if eval('__hasProp').call parent, key
+      ctor = -> @constructor = child
+      ctor:: = parent.prototype
+      child.prototype = new ctor
+      child.__super__ = parent::
+      child
+
 # ##class Scope
 # This class represents a lexical scope.
 exports.Scope = class Scope
   
   # The 'scoped eval' literal.
   EVAL_LITERAL = "(function(__expr){return eval(__expr)})"
-  literal: -> EVAL_LITERAL
-
+  
   # ### Class methods
   
   # #### Scope.eval(expr)
@@ -41,8 +56,46 @@ exports.Scope = class Scope
   # current scope. Whereas `eval("x")` will.
   # 
   # `Scope.eval` provides the outer scope for all scoped evals.
-  @eval = `(1, eval)(EVAL_LITERAL)`
-
+  @_eval = `(1, eval)(EVAL_LITERAL)`
+  
+  # #### Scope::eval(context, expr)
+  # Evaluate an expression in this scope.
+  # 
+  # The optional `context` parameter serves as the value of `this`
+  # for the eval of `expr`.
+  # 
+  # `context.locals` may define additional locals visible only to `expr`.
+  # 
+  # ##### Argument Decompilation
+  # The `expr` argument need not be a string: it can also be a function or 
+  # an object that defines a `literalize` method. See `Scope.literalize`.
+  # This means that you can recompile a function in another scope like this:
+  #    
+  #     var getXFromScope = scope.eval(function(){return x});
+  #     log(getXFromScope()); // Prints the current value of x in the scope.
+  #    
+  @eval = (context, expr, literalize_ = literalize) -> 
+    # Normalize arguments
+    [context, expr] = [null, context] unless expr?
+    # Code to declare and set locals
+    locals = context?.locals and (for name of context.locals
+      "var #{name} = this.locals.#{name};\n").join('') or ""
+    # Code to declare and set literals
+    literals = context?.literals and (for name, val of context.literals
+      "var #{name} = #{literalize val};\n").join('') or ""
+    # Set the value of `this` for this scope for this invocation.
+    @set? '__context', context
+    # eval expr in the context of locals and literals
+    @_eval.call context, locals + literals + literalize_ expr
+  
+  # #### Scope::run(ctx, fn)
+  # 'Run' a function in this scope. i.e., `literalize`, `eval` and `call`
+  # the given function within this scope.
+  #    
+  #     log(scope.run(function(){return x})); // Prints the current value of x in the scope.
+  # 
+  @run = (ctx, fn) -> @eval ctx, fn, (fn) -> "#{literalize fn}.call(this)"
+    
   # #### Scope.literalize(x)
   # Return a literal expression for `x`
   @literalize = literalize = (x) ->
@@ -59,23 +112,6 @@ exports.Scope = class Scope
 
   # #### Class properties intended to be overridden.
   
-  # These locals are defined in the root scope.
-  @rootLocals =
-    # CoffeeScript runtime helpers
-    __slice: Array::slice
-    __bind: (fn, me) -> -> fn.apply me, arguments
-    __indexOf: Array::indexOf or (item) ->
-      return i if x is item for x, i in @
-    __hasProp: Object::hasOwnProperty
-    __extends: (child, parent) ->
-      for key of parent
-        child[key] = parent[key] if eval('__hasProp').call parent, key
-        ctor = -> @constructor = child
-        ctor:: = parent.prototype
-        child.prototype = new ctor
-        child.__super__ = parent::
-        child
-  
   # List of reserved variable names.
   @reserved = ['__expr']
             
@@ -83,26 +119,15 @@ exports.Scope = class Scope
   @makeGetter = (name) ->       -> @get name
   @makeSetter = (name) -> (val) -> @set name, val, false
   
-  # #### Class initializer
-  # Call this function at the end of your Scope subclass to
-  # create global and root scopes for your class.
-  @initialize = -> 
-    
-    # Create a global scope for this class
-    @global = new @()
-    
-    # Create a root scope for this class. 
-    # All scopes may extend this scope.
-    # It contains the rootLocals.
-    @root = @global.extend locals: @rootLocals
+  @root = new @ {locals: COFFEESCRIPT_HELPERS}
   
   # #### Scope.create(options)
   # Returns a scope that extends the root scope
   # of this class. 
   # 
   # See `constructor` for description of options.
-  @create = (options) -> @root.extend options
-
+  @create = (options = {}) -> @root.extend options   
+  
   # #### constructor(options)
   # Called with no arguments: creates a global scope.
   # 
@@ -144,13 +169,16 @@ exports.Scope = class Scope
     # target scope.
     @options.locals.__this = @
     {@parent} = @options
+    # The last value of `this` when Scope::eval was called with a context.
+    # Root scopes only.
+    @options.locals.__context = null if not @parent
     # Register variable names declared in options.
     names = []
     names.push name for name of @options[k] for k in varTypes
     throw 'Reserved' for n in names when n in @constructor.reserved
     @names = names.concat @parent?.names or []
     # Compile the 'scoped eval'
-    @_eval = @parent?.eval(@options, @) or Scope.eval      
+    @_eval = (@parent or Scope).eval @options, EVAL_LITERAL
     # #####Exports
     # Exports allow direct access to locals inside the scope via
     # getters and setters (where support exists):
@@ -179,47 +207,9 @@ exports.Scope = class Scope
       @[x] = C.makeGetter(x)() for x in exports
 
   
-  # The current value of `this` inside the eval.
-  context: null
+  eval: @eval
   
-  # #### Scope::eval(context, expr)
-  # Evaluate an expression in this scope.
-  # 
-  # The optional `context` parameter serves as the value of `this`
-  # for the eval of `expr`.
-  # 
-  # `context.locals` may define additional locals visible only to `expr`.
-  # 
-  # ##### Argument Decompilation
-  # The `expr` argument need not be a string: it can also be a function or 
-  # an object that defines a `literalize` method. See `Scope.literalize`.
-  # This means that you can recompile a function in another scope like this:
-  #    
-  #     var getXFromScope = scope.eval(function(){return x});
-  #     log(getXFromScope()); // Prints the current value of x in the scope.
-  #    
-  eval: (@context, expr) -> 
-    [@context, expr] = [{}, @context] unless expr
-    locals = 
-      if @context.locals then (for name of @context.locals
-        "var #{name} = this.locals.#{name};\n").join ''
-      else ""
-    literals = 
-      if @context.literals then (for name, val of @context.literals
-        "var #{name} = #{literalize val};\n").join ''
-      else ""
-    
-    @_eval.call @context, locals + literals + literalize expr
-  
-  # #### Scope::run(ctx, fn)
-  # 'Run' a function in this scope. i.e., `literalize`, `eval` and `call`
-  # the given function within this scope.
-  #    
-  #     log(scope.run(function(){return x})); // Prints the current value of x in the scope.
-  # 
-  run: (ctx, fn) -> 
-    [ctx, fn] = [{}, ctx] unless fn
-    @eval ctx, "#{literalize fn}.call(this)"
+  run: @run
 
   # #### Scope::set(name, val, isLiteral)
   # Set local variable to value.
@@ -240,8 +230,6 @@ exports.Scope = class Scope
   # #### Scope::extend(options)
   # Create a new scope that extends this one, with the given options.
   # See `constructor` for a list of options.
-  extend: (options = {}) -> new @constructor extend options, parent: @
-     
-  #Initialize this class
-  @initialize()
+  extend: (options = {}) -> 
+    new (options.class or @constructor) extend options, parent: @
   
