@@ -115,9 +115,6 @@ exports.Scope = Scope = (function() {
       }
       return _results;
     })()).join('') || "";
-    if (typeof this.set === "function") {
-      this.set('__context', context);
-    }
     return this._eval.call(context, locals + literals + literalize_(expr));
   };
   Scope.run = function(ctx, fn) {
@@ -168,9 +165,6 @@ exports.Scope = Scope = (function() {
     }
     this.options.locals.__this = this;
     this.parent = this.options.parent;
-    if (!this.parent) {
-      this.options.locals.__context = null;
-    }
     names = [];
     for (_j = 0, _len2 = varTypes.length; _j < _len2; _j++) {
       k = varTypes[_j];

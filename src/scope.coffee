@@ -83,8 +83,6 @@ exports.Scope = class Scope
     # Code to declare and set literals
     literals = context?.literals and (for name, val of context.literals
       "var #{name} = #{literalize val};\n").join('') or ""
-    # Set the value of `this` for this scope for this invocation.
-    @set? '__context', context
     # eval expr in the context of locals and literals
     @_eval.call context, locals + literals + literalize_ expr
   
@@ -169,9 +167,6 @@ exports.Scope = class Scope
     # target scope.
     @options.locals.__this = @
     {@parent} = @options
-    # The last value of `this` when Scope::eval was called with a context.
-    # Root scopes only.
-    @options.locals.__context = null if not @parent
     # Register variable names declared in options.
     names = []
     names.push name for name of @options[k] for k in varTypes
