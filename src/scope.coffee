@@ -44,20 +44,34 @@ exports.Scope = class Scope
   
   # ### Class methods
   
-  # #### Scope.eval(expr)
+  # #### Scope._eval(expr)
   # A function to eval a given expression safely wrapped in a function
   # in the global scope.
   #    
   # `Scope.eval(expr)` has these properties:
   # 
-  # 1. `Scope.eval("var x")` will not declare a new global. 
+  # 1. `Scope._eval("var x")` will not declare a new global. 
   # Whereas `evalInGlobalScope("var x")` will.
-  # 2. `Scope.eval("x")` will not return the value of `x` in the 
+  # 2. `Scope._eval("x")` will not return the value of `x` in the 
   # current scope. Whereas `eval("x")` will.
   # 
-  # `Scope.eval` provides the outer scope for all scoped evals.
+  # `Scope._eval` provides the outer scope for all scoped evals.
   @_eval = `(1, eval)(EVAL_LITERAL)`
   
+  # #### Scope.literalize(x)
+  # Return a literal expression for `x`
+  @literalize = literalize = (x) ->
+    # A string must already be an expression.
+    if isString x then x
+    else if isFn x 
+      # 'Decompile' a function using `Function::toString` (where supported)
+      x = x.toString()
+      # Remove name from named function
+      x = x.replace /function[^\(]*\(/, "function ("
+      "(#{x})"
+    # Otherwise, `x` must literalize itself.
+    else x.literal()
+
   # #### Scope::eval(context, expr)
   # Evaluate an expression in this scope.
   # 
@@ -66,9 +80,11 @@ exports.Scope = class Scope
   # 
   # `context.locals` may define additional locals visible only to `expr`.
   # 
+  # `context.literals` may define additional literals visible only to `expr`.
+  # 
   # ##### Argument Decompilation
   # The `expr` argument need not be a string: it can also be a function or 
-  # an object that defines a `literalize` method. See `Scope.literalize`.
+  # any object that defines a `literal` method. See `Scope.literalize`.
   # This means that you can recompile a function in another scope like this:
   #    
   #     var getXFromScope = scope.eval(function(){return x});
@@ -94,20 +110,6 @@ exports.Scope = class Scope
   # 
   @run = (ctx, fn) -> @eval ctx, fn, (fn) -> "#{literalize fn}.call(this)"
     
-  # #### Scope.literalize(x)
-  # Return a literal expression for `x`
-  @literalize = literalize = (x) ->
-    # A string must already be an expression.
-    if isString x then x
-    else if isFn x 
-      # 'Decompile' a function using `Function::toString` (where supported)
-      x = x.toString()
-      # Remove name from named function
-      x = x.replace /function[^\(]*\(/, "function ("
-      "(#{x})"
-    # Otherwise, `x` must literalize itself.
-    else x.literal()
-
   # #### Class properties intended to be overridden.
   
   # List of reserved variable names.
@@ -181,27 +183,29 @@ exports.Scope = class Scope
     #     var scope = Scope.create({locals: {foo: 0}});
     # 
     #     // Set a local variable inside the target scope (setters are by reference).
-    #     scope.eval.foo = 5;
+    #     scope.foo = 5;
     #     log(scope.eval('foo'));      // 5
     # 
     #     // Get a local variable from the target scope.
     #     scope.eval('foo = 4');
-    #     log(scope.eval.foo);         // 4
+    #     log(scope.foo);         // 4
     # 
     # Exported variables are those that do not start with '_'
-    exports = (x for x in @names when not x.match /^_/)
-    throw 'Name collision' for x in exports when x of @
     C = @constructor
-    if @__defineGetter__?
-      for x in exports
+    xport = 
+      if @__defineGetter__? then (x) =>
         @__defineGetter__ x, C.makeGetter x
         @__defineSetter__ x, C.makeSetter x
-    else 
-      # In environments where `__defineGetter__` and `__defineSetter__` 
-      # are not supported, `@[name]` is set once when the scope is created.
-      @[x] = C.makeGetter(x).call @ for x in exports
-
-  
+      else 
+        # In environments where `__defineGetter__` and `__defineSetter__` 
+        # are not supported, `@[name]` is set once when the scope is created.
+        (x) => @[x] = C.makeGetter(x).call @
+        
+    for x in @names when not x.match /^_/
+      throw 'Name collision' if x of @
+      xport x
+      
+    
   # See Scope.eval
   eval: @eval
   
