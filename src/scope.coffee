@@ -202,9 +202,14 @@ exports.Scope = class Scope
       @[x] = C.makeGetter(x).call @ for x in exports
 
   
+  # See Scope.eval
   eval: @eval
   
+  # See Scope.run
   run: @run
+  
+  # Call `f` with this scope as the context.
+  self: (f) -> f.call @
 
   # #### Scope::set(name, val, isLiteral)
   # Set local variable to value.

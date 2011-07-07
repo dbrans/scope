@@ -214,6 +214,9 @@ exports.Scope = Scope = (function() {
   }
   Scope.prototype.eval = Scope.eval;
   Scope.prototype.run = Scope.run;
+  Scope.prototype.self = function(f) {
+    return f.call(this);
+  };
   Scope.prototype.set = function(name, val, isLiteral) {
     var obj, _len, _ref, _results;
     if (isString(name)) {
