@@ -14,7 +14,7 @@
   };define('./scope', (function exports() {
 var exports = this;
 /*
- * Scopejs v0.10.0
+ * Scopejs v0.10.1
  * http://scopejs.org
  *
  * Copyright(c) 2011 Derek Brans <dbrans@gmail.com>
