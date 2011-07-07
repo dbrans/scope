@@ -3,7 +3,7 @@ A JavaScript library for defining and working with lexical scopes.
 
 [ScopeJS is hosted on github](http://github.com/dbrans/scope).
 
-Latest version: [0.10.0](http://github.com/dbrans/scope)
+Latest version: [0.10.1](http://github.com/dbrans/scope)
 
 ## Table of Contents
 - [Installation and Usage](#usage)
