@@ -112,7 +112,7 @@ create a lexical scope where those variables are defined like this:
     
     var scopeEval = (function() {
       eval("var " + vars.join(',') + ';' + EVAL_LITERAL);
-    });
+    })();
     
 This idea of a scoped eval function is at the heart of ScopeJS. 
 
@@ -131,7 +131,7 @@ the target scope. In other words,
     var scopeEval = (function() {
       // TARGET SCOPE
       eval("var " + vars.join(',') + ';' + EVAL_LITERAL);
-    });
+    })();
     
 In ScopeJS, however, the target scope lives somewhere else and cannot see the 
 current scope (see the `Scope.eval` class method in the 
